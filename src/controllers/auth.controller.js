@@ -45,148 +45,125 @@ const verifyEmail = (field_name, field_value) => {
     }
 }
 
-export const registerController = async (req, res, next) =>{
-    try{const {name, password, email} = req.body
+export const registerController = async (req, res, next) => {
+    try {
+        const { name, password, email } = req.body;
 
-    //TODO
-    //Validar name, password, email
-    const registerConfig = {
-        name: {
-            value: name,
-            errors: [],
-            validation: [
-                verifyString,
-                (field_name, field_value) => verifyMinLength(field_name, field_value, 5)
-            ]
-        },
-        password: {
-            value: password,
-            errors: [],
-            validation: [
-                verifyString,
-                (field_name, field_value) => verifyMinLength(field_name, field_value, 10)
-            ]
-        },
-        email: {
-            value: email,
-            errors: [],
-            validation: [
-                verifyEmail,
-                (field_name, field_value) => verifyMinLength(field_name, field_value, 10)
-            ]
-        }
-    }
-
-    let hayErrores = false
-    for (let field_name in registerConfig){
-        for(let validation of registerConfig[field_name].validation){
-            let result = validation(field_name, registerConfig[field_name].value)
-            if(result){
-                hayErrores = true
-                registerConfig[field_name].errors.push(result)
+        // Validar name, password, email
+        const registerConfig = {
+            name: {
+                value: name,
+                errors: [],
+                validation: [
+                    verifyString,
+                    (field_name, field_value) => verifyMinLength(field_name, field_value, 5)
+                ]
+            },
+            password: {
+                value: password,
+                errors: [],
+                validation: [
+                    verifyString,
+                    (field_name, field_value) => verifyMinLength(field_name, field_value, 10)
+                ]
+            },
+            email: {
+                value: email,
+                errors: [],
+                validation: [
+                    verifyEmail,
+                    (field_name, field_value) => verifyMinLength(field_name, field_value, 10)
+                ]
             }
         }
-    }
 
-    if(hayErrores){
+        let hayErrores = false;
+        for (let field_name in registerConfig) {
+            for (let validation of registerConfig[field_name].validation) {
+                let result = validation(field_name, registerConfig[field_name].value);
+                if (result) {
+                    hayErrores = true;
+                    registerConfig[field_name].errors.push(result);
+                }
+            }
+        }
+
+        if (hayErrores) {
+            const response = new ResponseBuilder()
+                .setOk(false)
+                .setStatus(400)
+                .setCode('ERROR')
+                .setMessage('Campos invalidos')
+                .setData(
+                    { errors: registerConfig }
+                )
+                .build();
+            return res.json(response);
+        }
+
+        // Creación del usuario
+        const userCreated = await AuthRepository.createUser({
+            name: registerConfig.name.value,
+            email: registerConfig.email.value,
+            password: registerConfig.password.value
+        });
+
+        // Enviar correo de verificación
+        const verificationToken = userCreated.verificationToken;
+        const verificationUrl = `http://localhost:3000/auth/verify-email/${verificationToken}`;
+
+        const result = await transportarEmail.sendMail({
+            subject: 'Validación de correo',
+            to: registerConfig.email.value,
+            html: `
+                <h1>Valida tu correo</h1>
+                <p>Por favor, confirma tu correo haciendo clic en el siguiente enlace:</p>
+                <a href="${verificationUrl}">Validar</a>
+            `
+        });
+
         const response = new ResponseBuilder()
-        .setOk(false)
-        .setStatus(400)
-        .setCode('ERROR')
-        .setMessage('Campos invalidos')
-        .setData(
-            {errors: registerConfig}
-        )
-        .build()
-        return res.json(response)
+            .setCode('SUCCESS')
+            .setOk(true)
+            .setStatus(200)
+            .setMessage('Usuario registrado correctamente, por favor verifica tu correo')
+            .setData(
+                { registerResult: userCreated }
+            )
+            .build();
+
+        return res.json(response);
+
+    } catch (error) {
+        if (error.code === 11000) {
+            return next(new AppError('Email already exists', 400));
+        }
+        return next(new AppError(error.message, error.status_code));
     }
-    
-    const validationToken = jwt.sign (
-        {
-        email: registerConfig.email.value,
-    },
-    ENVIROMENT.SECRET_KEY,
-    {
-        expiresIn: '1d'
-    }
-)
-
-    const verificationToken = `http://localhost:3000/auth/verify-email/${validationToken}`
-    
-
-    const result = await transportarEmail.sendMail({
-        subject: 'Validacion de correo',
-        to: registerConfig.email.value,
-        html: `
-            <h1>Valida tu correo</h1>
-            <p>Por favor, confirma tu correo</p>
-            <a href=${verificationToken}>Validar</a>
-        `
-    })
-
-    const userCreated = await AuthRepository.createUser({
-        name: registerConfig.name.value,
-        email: registerConfig.email.value,
-        password: registerConfig.password.value
-    }) 
-    await userCreated.save()
-
-    const response = new ResponseBuilder()
-    .setCode('SUCCES')
-    .setOk(true)
-    .setStatus(200)
-    .setMessage('Usuario registrado correctamente')
-    .setData(
-        {registerResult: userCreated}
-    )
-    .build()
-    return res.json(response)
-}catch(error){
-    if(error.code === 11000){
-        return next(new AppError('Email already exists', 400))
-    }
-    return next( new AppError(error.message, error.status_code) )
 }
-}
+
 
 export const verifyEmailController = async (req, res, next) => {
     try {
         const { validationToken } = req.params;  // Asegura que el nombre del parámetro coincide
         console.log('Token recibido:', validationToken);
 
-        const payload = jwt.verify(validationToken, ENVIROMENT.SECRET_KEY ); // Asegura que el nombre de la variable de entorno es correcto
-        const email_to_verify = payload.email;
-
-        // Busca el usuario por el email extraído del token
-        const user = await AuthRepository.getUserByEmail(email_to_verify);
-        
-        // Verifica que el usuario exista
-        if (!user) {
-            return next (new AppError('User not found', 404));
-        }
-
-        // Verifica que el correo no haya sido verificado previamente
-        if (user.emailVerified) {
-            return next (new AppError('Email already verified', 400));
-        }
-
-        // Marca el correo como verificado
-        user.emailVerified = true;
-        await user.save();
+        const user = await AuthRepository.verifyEmail(validationToken); // Verifica el token y marca el email como verificado
 
         const response = new ResponseBuilder()
-        .setOk(true)
-        .setCode('EMAIL_VERIFIED')
-        .setMessage('Email verified successfully')
-        .setStatus(200)
-        .build(); // Responde con éxito si todo va bien
-        // res.redirect('http://localhost:5173/auth/login')
+            .setOk(true)
+            .setCode('EMAIL_VERIFIED')
+            .setMessage('Email verificado correctamente')
+            .setStatus(200)
+            .build();
+
         return res.json(response);
-        
+
     } catch (error) {
-        return next( new AppError(error.message, error.status_code) )
+        return next(new AppError(error.message, 400));  // Manejo de errores si algo falla
     }
-}
+};
+
 
 export const loginController = async (req, res, next) => {
     try{
@@ -197,6 +174,10 @@ export const loginController = async (req, res, next) => {
             return next(new AppError('User not found', 404))
         }
 
+        if(!user.emailVerified){
+            return next(new AppError('Email not verified', 400))
+        }
+
         const isMatch = await bcrypt.compare(password, user.password)
         if(!isMatch){
             return next(new AppError('Incorrect password', 400))
@@ -204,7 +185,7 @@ export const loginController = async (req, res, next) => {
 
         const accessToken = jwt.sign(
             {
-                id: user._id,
+                id: user.id,
                 name: user.name,
                 email: user.email,
                 role: user.role
