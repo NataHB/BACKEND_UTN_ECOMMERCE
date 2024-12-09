@@ -9,8 +9,10 @@ const pool = mysql.createPool({
     database: ENVIROMENT.MYSQL.DATABASE
 })
 
-pool.getConnection().then(() => {
+pool.getConnection().then(
+    (connection) => {
     console.log('mysql is connected');
+    connection.release();
 })
 .catch((error) => {
     console.error('mysql is not connected', error);
