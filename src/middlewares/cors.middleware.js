@@ -1,4 +1,4 @@
-import ENVIROMENT from "../config/enviroment";
+import ENVIROMENT from "../config/enviroment.js";
 
 const allowed_origins = [
     'http://localhost:5173',
