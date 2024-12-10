@@ -110,7 +110,7 @@ export const registerController = async (req, res, next) => {
 
         // Enviar correo de verificación
         const verificationToken = userCreated.verificationToken;
-        const verificationUrl = `http://localhost:3000/auth/verify-email/${verificationToken}`;
+        const verificationUrl = `${ENVIROMENT.URL_FRONTEND}/auth/verify-email/${verificationToken}`;
 
         const result = await transportarEmail.sendMail({
             subject: 'Validación de correo',
