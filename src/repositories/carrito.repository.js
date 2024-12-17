@@ -12,7 +12,7 @@ class CartRepository {
             (products.price * cart_items.quantity) AS total
             FROM cart_items
             JOIN products ON cart_items.product_id = products.id
-            WHERE cart_items.user_id = ?`
+            WHERE cart_items.user_id = ? AND products.active = TRUE`
         const [rows] = await pool.execute(query, [userId]);
         return rows; // Devuelve el carrito con los detalles del producto
     }
