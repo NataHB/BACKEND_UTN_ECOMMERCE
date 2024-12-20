@@ -21,6 +21,7 @@ class CartRepository {
         const query = 'SELECT * FROM cart_items WHERE user_id = ? AND product_id = ?';
         const [existingCartItem] = await pool.execute(query, [userId, productId]);
     
+
         if (existingCartItem.length > 0) {
             const updateQuery = 'UPDATE cart_items SET quantity = quantity + ? WHERE user_id = ? AND product_id = ?';
             await pool.execute(updateQuery, [quantity, userId, productId]);

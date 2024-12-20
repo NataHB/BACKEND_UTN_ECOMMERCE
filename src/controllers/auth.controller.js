@@ -110,7 +110,7 @@ export const registerController = async (req, res, next) => {
 
         // Enviar correo de verificación
         const verificationToken = userCreated.verificationToken;
-        const verificationUrl = `${ENVIROMENT.URL_FRONTEND}/auth/verify-email/${verificationToken}`;
+        const verificationUrl = `${ENVIROMENT.URL_FRONTEND}/verify-email/${verificationToken}`;
 
         const result = await transportarEmail.sendMail({
             subject: 'Validación de correo',
@@ -135,8 +135,22 @@ export const registerController = async (req, res, next) => {
         return res.json(response);
 
     } catch (error) {
-        if (error.code === 11000) {
-            return next(new AppError('Email already exists', 400));
+        if (error.message === `Duplicate entry '${req.body.email}' for key 'email'`) {
+            const response = new ResponseBuilder()
+                .setOk(false)
+                .setStatus(400)
+                .setCode('EMAIL_EXISTS')
+                .setMessage('El email ya está registrado')
+                .setData({
+                    errors: {
+                        email: {
+                            value: req.body.email,
+                            errors: ['El email ya está registrado.'],
+                        },
+                    },
+                })
+                .build();
+            return res.json(response);
         }
         return next(new AppError(error.message, error.status_code));
     }
@@ -171,16 +185,16 @@ export const loginController = async (req, res, next) => {
 
         const user = await AuthRepository.getUserByEmail(email)
         if(!user){
-            return next(new AppError('User not found', 404))
+            return next(new AppError('Usuario no encontrado', 404))
         }
 
         if(!user.emailVerified){
-            return next(new AppError('Email not verified', 400))
+            return next(new AppError('Email no verificado', 400))
         }
 
         const isMatch = await bcrypt.compare(password, user.password)
         if(!isMatch){
-            return next(new AppError('Incorrect password', 400))
+            return next(new AppError('Contraseña incorrecta', 400))
         }
 
         const accessToken = jwt.sign(
