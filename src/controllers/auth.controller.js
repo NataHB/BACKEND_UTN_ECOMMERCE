@@ -159,11 +159,11 @@ export const registerController = async (req, res, next) => {
 
 export const verifyEmailController = async (req, res, next) => {
     try {
-        const { validationToken } = req.params;  // Asegura que el nombre del parámetro coincide
+        const { validationToken } = req.params; 
         console.log('Token recibido:', validationToken);
 
-        const user = await AuthRepository.verifyEmail(validationToken); // Verifica el token y marca el email como verificado
-
+        const user = await AuthRepository.verifyEmail(validationToken); 
+        
         const response = new ResponseBuilder()
             .setOk(true)
             .setCode('EMAIL_VERIFIED')
@@ -174,7 +174,7 @@ export const verifyEmailController = async (req, res, next) => {
         return res.json(response);
 
     } catch (error) {
-        return next(new AppError(error.message, 400));  // Manejo de errores si algo falla
+        return next(new AppError(error.message, 400));  
     }
 };
 

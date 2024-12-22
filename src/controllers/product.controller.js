@@ -20,6 +20,15 @@ const verifyMinLength = (field_name, field_value, minLength) => {
     }
 }
 
+const verifyPositiveNumber = (field_name, field_value) => {
+    if(!(field_value > 0)){
+        return {
+            error: 'POSITIVE_NUMBER_VALIDATION',
+            message: field_name + ' debe ser un numero positivo',
+        }
+    }
+}
+
 export const createProductController = async (req, res, next) => {
     try{
         const {title, description, price, stock, category, image_base64} = req.body
@@ -53,14 +62,14 @@ export const createProductController = async (req, res, next) => {
                 value: price,
                 errors: [],
                 validation: [ verifyString,
-                    (field_name, field_value) => verifyMinLength(field_name, field_value, 1)
+                    (field_name, field_value) => verifyPositiveNumber(field_name, field_value)
                 ]
             },
             stock: {
                 value: stock,
                 errors: [],
                 validation: [ verifyString,
-                    (field_name, field_value) => verifyMinLength(field_name, field_value, 1)
+                    (field_name, field_value) => verifyPositiveNumber(field_name, field_value)
                 ]
             },
             category: {
