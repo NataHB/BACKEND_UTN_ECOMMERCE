@@ -88,14 +88,14 @@ export const updateProductQuantityController = async (req, res, next) => {
             return next(new AppError('Producto o cantidad inválida', 400))
         }
 
-        const result = await CartRepository.updateProductQuantity(userId, productId, quantity);
+        const result = await CartRepository.updateProductQuantity(userId, productId, quantity)
 
         if (result === 0) {
-            return next(new AppError('Producto no encontrado en el carrito', 404));
+            return next(new AppError('Producto no encontrado en el carrito', 404))
         }
 
-        const cart = await CartRepository.getCartByUser(userId);
-
+        const cart = await CartRepository.getCartByUser(userId)
+        
         const response = new ResponseBuilder()
             .setOk(true)
             .setCode('QUANTITY_UPDATED')

@@ -10,6 +10,4 @@ authRouter.get('/verify-email/:validationToken', verifyEmailController)
 authRouter.post('/forgot-password', forgotPasswordController)
 authRouter.put('/recovery-password/:reset_token', recoveryPasswordController)
 
-//implementar middleware de autorizacion
-
 export default authRouter

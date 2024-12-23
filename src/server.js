@@ -5,9 +5,7 @@ import mongoDB from "./config/db.config.js";
 import carritoRouter from "./routes/carrito.routes.js";
 import productRouter from "./routes/product.route.js";
 import errorHandlerMiddleware from "./middlewares/errorHandler.middleware.js";
-import pool from "./config/db.mysql.config.js";
-import Product from "./models/products.model.js";
-import ProductRepository from "./repositories/product.repository.js";
+
 import { costumCorsMiddleware } from "./middlewares/cors.middleware.js";
 
 const PORT = 3000;

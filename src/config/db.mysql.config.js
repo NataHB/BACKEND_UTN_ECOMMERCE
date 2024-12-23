@@ -3,7 +3,6 @@ import ENVIROMENT from "./enviroment.js";
 
 //Nos permite crear un pool de conexiones
 const pool = mysql.createPool({
-    connectionLimit: 20,
     host: ENVIROMENT.MYSQL.HOST,
     user: ENVIROMENT.MYSQL.USER,
     password: ENVIROMENT.MYSQL.PASSWORD,

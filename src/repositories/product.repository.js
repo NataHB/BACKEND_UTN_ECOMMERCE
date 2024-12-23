@@ -1,5 +1,4 @@
 import pool from "../config/db.mysql.config.js";
-import Product from "../models/products.model.js";
 
 class ProductRepository{
 
@@ -30,13 +29,11 @@ class ProductRepository{
     
 
     static async updateProduct(product_id, product_data) {
-        // Obtener el producto actual
         const [products] = await pool.execute(`SELECT * FROM products WHERE id = ?`, [product_id])
         if (products.length === 0) throw new Error(`Producto con id ${product_id} no encontrado`)
     
         const existingProduct = products[0]
     
-        // Preparar los valores actualizados usando valores existentes si no se proporcionan
         const updatedFields = {
             title: product_data.title || existingProduct.title,
             price: product_data.price || existingProduct.price,
@@ -47,7 +44,6 @@ class ProductRepository{
             image_base64: product_data.image_base64 || existingProduct.image_base64,
         };
     
-        // Ejecutar la actualización
         const query = `
             UPDATE products 
             SET title = ?, price = ?, stock = ?, description = ?, seller_id = ?, category = ?, image_base64 = ?
@@ -62,16 +58,16 @@ class ProductRepository{
             updatedFields.category,
             updatedFields.image_base64,
             product_id,
-        ];
+        ]
     
-        const [result] = await pool.execute(query, params);
-        if (!result.affectedRows) throw new Error(`No se pudo actualizar el producto con id ${product_id}`);
+        const [result] = await pool.execute(query, params)
+        if (!result.affectedRows) throw new Error(`No se pudo actualizar el producto con id ${product_id}`)
     
-        return { ...updatedFields, id: product_id };
+        return { ...updatedFields, id: product_id }
     }
 
     static async getProducts () {
-        const [rows] = await pool.execute(`SELECT * FROM products WHERE active = true`);
+        const [rows] = await pool.execute(`SELECT * FROM products WHERE active = true`)
         return rows
     }
 

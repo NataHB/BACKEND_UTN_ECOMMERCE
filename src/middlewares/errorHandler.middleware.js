@@ -1,5 +1,3 @@
-import AppError from "../helpers/errors/app.error.js";
-
 const errorHandlerMiddleware = (err, req, res, next) => {
     err.status_code = err.status_code || 500;
     err.status = err.status || "ERROR";
@@ -15,7 +13,7 @@ const errorHandlerMiddleware = (err, req, res, next) => {
 
     return res.status(500).json({
         status: 'ERROR',
-        message: 'Nuestro error...'
+        message: 'Nuestro error'
     });
 };
 

@@ -252,7 +252,10 @@ export const forgotPasswordController = async (req, res, next) => {
         const result = await transportarEmail.sendMail({
             subject: 'Recuperar password',
             to: user.email,
-            html:`<a href=${resetUrl}> Recuperar </a>`
+            html:`<h1>Recuperar password</h1>
+                <p>Haciendo clic en el siguiente enlace vas a poner reestablacer tu contraseña:</p>
+                <a href="${resetUrl}">Recuperar</a>
+            `
     })
 
 
